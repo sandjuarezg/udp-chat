@@ -53,7 +53,9 @@ func main() {
 //  @param2 (addr): address of a UDP end point
 //  @param3 (reply): buffer of reply
 //
-//  @return1 (err): error variable
+//  @return1 (addrAux): address aux of a UDP end point
+//  @return2 (n): number of characters in buffer
+//  @return3 (err): error variable
 func handleRequest(conn *net.UDPConn, addr *net.UDPAddr, reply []byte) (addrAux *net.UDPAddr, n int, err error) {
 	for {
 		n, addrAux, err = conn.ReadFromUDP(reply)
