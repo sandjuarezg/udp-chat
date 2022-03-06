@@ -5,7 +5,10 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 )
+
+var addrs []*net.UDPAddr
 
 func main() {
 	if len(os.Args) != 3 {
@@ -26,6 +29,7 @@ func main() {
 	fmt.Println("Listening on", conn.LocalAddr())
 
 	reply := make([]byte, 1024)
+	wg := sync.WaitGroup{}
 
 	n, addr, err := conn.ReadFromUDP(reply)
 	if err != nil {
@@ -33,18 +37,28 @@ func main() {
 	}
 
 	for {
-		_, err = conn.WriteTo([]byte(fmt.Sprintf(" - Welcome %s - \n", reply[:n-1])), addr)
-		if err != nil {
-			log.Fatal(err)
-		}
+		wg.Add(1)
 
-		addrAux, nAux, err := handleRequest(conn, addr, reply)
-		if err != nil {
-			log.Fatal(err)
-		}
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
 
-		addr = addrAux
-		n = nAux
+			_, err = conn.WriteTo([]byte(fmt.Sprintf(" - Welcome %s - \n", reply[:n-1])), addr)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			addrs = append(addrs, addr)
+
+			addrAux, nAux, err := handleRequest(conn, addr, reply)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			addr = addrAux
+			n = nAux
+		}(&wg)
+
+		wg.Wait()
 	}
 }
 
@@ -63,7 +77,7 @@ func handleRequest(conn *net.UDPConn, addr *net.UDPAddr, reply []byte) (addrAux 
 			log.Fatal(err)
 		}
 
-		if addr.String() != addrAux.String() {
+		if !addrExists(addrAux) {
 			return
 		}
 
@@ -72,4 +86,19 @@ func handleRequest(conn *net.UDPConn, addr *net.UDPAddr, reply []byte) (addrAux 
 			log.Fatal(err)
 		}
 	}
+}
+
+// addrExists Check if address exists
+//  @param1 (addr): address of a UDP end point
+//
+//  @return1 (ban): ban variable
+func addrExists(addr *net.UDPAddr) (ban bool) {
+	for _, element := range addrs {
+		if element.String() == addr.String() {
+			ban = true
+			return
+		}
+	}
+
+	return
 }
