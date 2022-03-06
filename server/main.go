@@ -42,9 +42,11 @@ func main() {
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
 
-			_, err = conn.WriteTo([]byte(fmt.Sprintf(" - Welcome %s - \n", reply[:n-1])), addr)
-			if err != nil {
-				log.Fatal(err)
+			for _, element := range addrs {
+				_, err = conn.WriteTo([]byte(fmt.Sprintf(" - Welcome %s - \n", reply[:n-1])), element)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 
 			addrs = append(addrs, addr)
@@ -81,9 +83,13 @@ func handleRequest(conn *net.UDPConn, addr *net.UDPAddr, reply []byte) (addrAux 
 			return
 		}
 
-		_, err = conn.WriteTo([]byte(fmt.Sprintf("-> %s", reply[:n])), addrAux)
-		if err != nil {
-			log.Fatal(err)
+		for _, element := range addrs {
+			if element.String() != addrAux.String() {
+				_, err = conn.WriteTo([]byte(fmt.Sprintf("-> %s", reply[:n])), element)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 		}
 	}
 }
