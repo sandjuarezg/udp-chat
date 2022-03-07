@@ -43,9 +43,9 @@ func main() {
 			log.Fatal(err)
 		}
 
-		name, ban := addrExists(addr)
+		name, exists := addrExists(addr)
 
-		if ban {
+		if exists {
 			if string(reply[:n-1]) == "EXIT" {
 				for n, element := range users {
 					if element.addr.String() == addr.String() {
@@ -59,18 +59,20 @@ func main() {
 				}
 
 				fmt.Println(name, "offline")
-				continue
-			}
 
-			for _, element := range users {
-				if element.addr.String() != addr.String() {
-					_, err = conn.WriteTo([]byte(fmt.Sprintf("%s (%s): %s", name, time.Now().Format(time.RFC822Z), reply[:n])), element.addr)
-					if err != nil {
-						log.Fatal(err)
+			} else {
+				for _, element := range users {
+					if element.addr.String() != addr.String() {
+						_, err = conn.WriteTo([]byte(fmt.Sprintf("%s (%s): %s", name, time.Now().Format(time.RFC822Z), reply[:n])), element.addr)
+						if err != nil {
+							log.Fatal(err)
+						}
 					}
 				}
 			}
+
 		} else {
+
 			u := user{addr: addr, name: string(reply[:n-1])}
 			users = append(users, u)
 
@@ -86,7 +88,6 @@ func main() {
 				}
 			}
 		}
-
 	}
 }
 
@@ -95,11 +96,11 @@ func main() {
 //
 //  @return1 (name): name of user
 //  @return2 (ban): ban variable
-func addrExists(addr *net.UDPAddr) (name string, ban bool) {
+func addrExists(addr *net.UDPAddr) (name string, exists bool) {
 	for _, element := range users {
 		if element.addr.String() == addr.String() {
 			name = element.name
-			ban = true
+			exists = true
 			return
 		}
 	}
