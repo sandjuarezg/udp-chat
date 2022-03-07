@@ -50,14 +50,14 @@ func main() {
 				for n, element := range users {
 					if element.addr.String() == addr.String() {
 						users = append(users[:n], users[n+1:]...)
+					}
 
-						mess = fmt.Sprintf(" - Bye %s - \n", name)
-						mess += fmt.Sprintf(" - %d connected users - \n", len(users))
+					mess = fmt.Sprintf(" - Bye %s - \n", name)
+					mess += fmt.Sprintf(" - %d connected users - \n", len(users))
 
-						_, err = conn.WriteTo([]byte(mess), element.addr)
-						if err != nil {
-							log.Fatal(err)
-						}
+					_, err = conn.WriteTo([]byte(mess), element.addr)
+					if err != nil {
+						log.Fatal(err)
 					}
 				}
 
