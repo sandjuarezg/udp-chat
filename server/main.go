@@ -17,11 +17,11 @@ type user struct {
 var users []user
 
 func main() {
-	if len(os.Args) != 3 {
-		log.Fatal("Invalid input: [host] [port]")
+	if len(os.Args) != 2 {
+		log.Fatal("Invalid input: [port]")
 	}
 
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%s", os.Args[1], os.Args[2]))
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("localhost:%s", os.Args[1]))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,10 +52,7 @@ func main() {
 						users = append(users[:n], users[n+1:]...)
 					}
 
-					mess = fmt.Sprintf(" - Bye %s - \n", name)
-					mess += fmt.Sprintf(" - %d connected users - \n", len(users))
-
-					_, err = conn.WriteTo([]byte(mess), element.addr)
+					_, err = conn.WriteTo([]byte(fmt.Sprintf(" - Bye %s - \n", name)), element.addr)
 					if err != nil {
 						log.Fatal(err)
 					}
