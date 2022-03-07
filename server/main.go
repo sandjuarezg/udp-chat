@@ -61,7 +61,7 @@ func main() {
 					}
 				}
 
-				fmt.Printf("%s offline\n", name)
+				fmt.Println(name, "offline")
 				continue
 			}
 
