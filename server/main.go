@@ -5,9 +5,16 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
-var addrs []*net.UDPAddr
+// User structure
+type user struct {
+	addr *net.UDPAddr // address of UDP
+	name string       // name of user
+}
+
+var users []user
 
 func main() {
 	if len(os.Args) != 3 {
@@ -28,6 +35,7 @@ func main() {
 	fmt.Println("Listening on", conn.LocalAddr())
 
 	reply := make([]byte, 1024)
+	var mess string
 
 	for {
 		n, addr, err := conn.ReadFromUDP(reply)
@@ -35,26 +43,28 @@ func main() {
 			log.Fatal(err)
 		}
 
-		if addrExists(addr) {
-			for _, element := range addrs {
-				if element.String() != addr.String() {
-					_, err = conn.WriteTo([]byte(fmt.Sprintf("-> %s", reply[:n])), element)
+		name, ban := addrExists(addr)
+
+		if ban {
+			for _, element := range users {
+				if element.addr.String() != addr.String() {
+					_, err = conn.WriteTo([]byte(fmt.Sprintf("%s (%s): %s", name, time.Now().Format(time.RFC822Z), reply[:n])), element.addr)
 					if err != nil {
 						log.Fatal(err)
 					}
 				}
 			}
 		} else {
-			addrs = append(addrs, addr)
+			u := user{addr: addr, name: string(reply[:n-1])}
+			users = append(users, u)
 
-			name := reply[:n-1]
-			fmt.Println(string(name), "connected")
+			fmt.Println(u.name, "connected")
 
-			mess := fmt.Sprintf(" - %s connected - \n", name)
-			mess += fmt.Sprintf(" - %d connected users - \n", len(addrs))
+			mess = fmt.Sprintf(" - %s connected - \n", u.name)
+			mess += fmt.Sprintf(" - %d connected users - \n", len(users))
 
-			for _, element := range addrs {
-				_, err = conn.WriteTo([]byte(mess), element)
+			for _, element := range users {
+				_, err = conn.WriteTo([]byte(mess), element.addr)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -67,10 +77,12 @@ func main() {
 // addrExists Check if address exists
 //  @param1 (addr): address of a UDP end point
 //
-//  @return1 (ban): ban variable
-func addrExists(addr *net.UDPAddr) (ban bool) {
-	for _, element := range addrs {
-		if element.String() == addr.String() {
+//  @return1 (name): name of user
+//  @return2 (ban): ban variable
+func addrExists(addr *net.UDPAddr) (name string, ban bool) {
+	for _, element := range users {
+		if element.addr.String() == addr.String() {
+			name = element.name
 			ban = true
 			return
 		}
