@@ -70,11 +70,13 @@ func main() {
 				for _, element := range users {
 
 					if element.addr.String() != addr.String() {
+
 						t := time.Now()
 						_, err = conn.WriteTo([]byte(fmt.Sprintf("%s (%d:%d): %s", name, t.Hour(), t.Minute(), reply[:n])), element.addr)
 						if err != nil {
 							log.Fatal(err)
 						}
+
 					}
 
 				}
@@ -112,9 +114,11 @@ func addrExists(addr *net.UDPAddr) (name string, exists bool) {
 	for _, element := range users {
 
 		if element.addr.String() == addr.String() {
+
 			name = element.name
 			exists = true
 			return
+
 		}
 
 	}
