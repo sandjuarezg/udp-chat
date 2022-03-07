@@ -95,7 +95,7 @@ func main() {
 //  @param1 (addr): address of a UDP end point
 //
 //  @return1 (name): name of user
-//  @return2 (ban): ban variable
+//  @return2 (exists): exists variable
 func addrExists(addr *net.UDPAddr) (name string, exists bool) {
 	for _, element := range users {
 		if element.addr.String() == addr.String() {
