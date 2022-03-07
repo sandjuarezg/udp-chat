@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync"
 )
 
 var addrs []*net.UDPAddr
@@ -29,7 +28,6 @@ func main() {
 	fmt.Println("Listening on", conn.LocalAddr())
 
 	reply := make([]byte, 1024)
-	wg := sync.WaitGroup{}
 
 	n, addr, err := conn.ReadFromUDP(reply)
 	if err != nil {
@@ -37,36 +35,29 @@ func main() {
 	}
 
 	for {
-		wg.Add(1)
 
-		go func(wg *sync.WaitGroup) {
-			defer wg.Done()
+		name := reply[:n-1]
 
-			name := reply[:n-1]
+		addrs = append(addrs, addr)
+		fmt.Println(string(name), "connected")
 
-			addrs = append(addrs, addr)
-			fmt.Println(string(name), "connected")
+		mess := fmt.Sprintf(" - %s connected - \n", name)
+		mess += fmt.Sprintf(" - %d connected users - \n", len(addrs))
 
-			mess := fmt.Sprintf(" - %s connected - \n", name)
-			mess += fmt.Sprintf(" - %d connected users - \n", len(addrs))
-
-			for _, element := range addrs {
-				_, err = conn.WriteTo([]byte(mess), element)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
-
-			addrAux, nAux, err := handleRequest(conn, addr, reply)
+		for _, element := range addrs {
+			_, err = conn.WriteTo([]byte(mess), element)
 			if err != nil {
 				log.Fatal(err)
 			}
+		}
 
-			addr = addrAux
-			n = nAux
-		}(&wg)
+		addrAux, nAux, err := handleRequest(conn, addr, reply)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		wg.Wait()
+		addr = addrAux
+		n = nAux
 	}
 }
 
