@@ -46,6 +46,25 @@ func main() {
 		name, ban := addrExists(addr)
 
 		if ban {
+			if string(reply[:n-1]) == "EXIT" {
+				for n, element := range users {
+					if element.addr.String() == addr.String() {
+						users = append(users[:n], users[n+1:]...)
+
+						mess = fmt.Sprintf(" - Bye %s - \n", name)
+						mess += fmt.Sprintf(" - %d connected users - \n", len(users))
+
+						_, err = conn.WriteTo([]byte(mess), element.addr)
+						if err != nil {
+							log.Fatal(err)
+						}
+					}
+				}
+
+				fmt.Printf("%s offline\n", name)
+				continue
+			}
+
 			for _, element := range users {
 				if element.addr.String() != addr.String() {
 					_, err = conn.WriteTo([]byte(fmt.Sprintf("%s (%s): %s", name, time.Now().Format(time.RFC822Z), reply[:n])), element.addr)
