@@ -38,6 +38,7 @@ func main() {
 	var mess string
 
 	for {
+
 		n, addr, err := conn.ReadFromUDP(reply)
 		if err != nil {
 			log.Fatal(err)
@@ -46,8 +47,11 @@ func main() {
 		name, exists := addrExists(addr)
 
 		if exists {
+
 			if string(reply[:n-1]) == "EXIT" {
+
 				for n, element := range users {
+
 					if element.addr.String() == addr.String() {
 						users = append(users[:n], users[n+1:]...)
 					}
@@ -56,18 +60,23 @@ func main() {
 					if err != nil {
 						log.Fatal(err)
 					}
+
 				}
 
 				fmt.Println(name, "offline")
 
 			} else {
+
 				for _, element := range users {
+
 					if element.addr.String() != addr.String() {
-						_, err = conn.WriteTo([]byte(fmt.Sprintf("%s (%s): %s", name, time.Now().Format(time.RFC822Z), reply[:n])), element.addr)
+						t := time.Now()
+						_, err = conn.WriteTo([]byte(fmt.Sprintf("%s (%d:%d): %s", name, t.Hour(), t.Minute(), reply[:n])), element.addr)
 						if err != nil {
 							log.Fatal(err)
 						}
 					}
+
 				}
 			}
 
@@ -82,12 +91,15 @@ func main() {
 			mess += fmt.Sprintf(" - %d connected users - \n", len(users))
 
 			for _, element := range users {
+
 				_, err = conn.WriteTo([]byte(mess), element.addr)
 				if err != nil {
 					log.Fatal(err)
 				}
+
 			}
 		}
+
 	}
 }
 
@@ -98,11 +110,13 @@ func main() {
 //  @return2 (exists): exists variable
 func addrExists(addr *net.UDPAddr) (name string, exists bool) {
 	for _, element := range users {
+
 		if element.addr.String() == addr.String() {
 			name = element.name
 			exists = true
 			return
 		}
+
 	}
 
 	return
